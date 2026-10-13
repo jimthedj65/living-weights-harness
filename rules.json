@@ -73,13 +73,13 @@
      "recall": {"q": "What is Harrowgate Labs' overtime pay rate?", "expect": ["30", "1.5"]},
      "problems": [
        {"q": "A Harrowgate Labs employee works 4 overtime hours. How much overtime pay do they earn?", "expect": ["120"]},
-       {"q": "A Harrowgate Labs employee earns 150 pounds of overtime pay. How many overtime hours did they work?", "expect": ["5 hours", "5 overtime", "**5**", "is 5", "= 5"]}
+       {"q": "A Harrowgate Labs employee earns 150 pounds of overtime pay. How many overtime hours did they work?", "expect": ["5 hours", "5 overtime", "**5**", "is 5", "= 5", "5"]}
      ]},
     {"id": "r3", "text": "One Zelkor is a unit of length equal to 12 metres.",
      "recall": {"q": "How long is one Zelkor?", "expect": ["12 met", "twelve met"]},
      "problems": [
        {"q": "How many metres are 3.5 Zelkors?", "expect": ["42"]},
-       {"q": "A path is 60 metres long. How many Zelkors is that?", "expect": ["5 zelkor", "**5**", "is 5", "= 5", "five"]}
+       {"q": "A path is 60 metres long. How many Zelkors is that?", "expect": ["5 zelkor", "**5**", "is 5", "= 5", "five", "5"]}
      ]},
     {"id": "r4", "text": "Harrowgate Labs replaces each server 4 years after it is installed.",
      "recall": {"q": "How often does Harrowgate Labs replace its servers?", "expect": ["4 year", "four year"]},

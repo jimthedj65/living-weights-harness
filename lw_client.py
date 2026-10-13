@@ -1,6 +1,7 @@
 """Standard-library client for a TensorFold server: greedy chat, keyword checks and /v1/slide/learn events."""
 
 import json
+import re
 import sys
 import time
 import urllib.request
@@ -30,9 +31,15 @@ def ask(base, question, max_tokens=MAX_TOKENS):
 
 
 def hit(answer, needles):
-    """True when any needle appears in the answer, ignoring case."""
-    low = answer.lower()
-    return any(n.lower() in low for n in needles)
+    """True when any needle appears in the answer, ignoring case; numbers match whole ("5 hours" misses "7.5 hours")."""
+    return any(re.search(_bounded(n), answer, re.IGNORECASE) for n in needles)
+
+
+def _bounded(needle):
+    """Regex for a needle whose leading or trailing number may not be part of a longer number."""
+    head = r"(?<![\d.,])" if needle[:1].isdigit() else ""
+    tail = r"(?!\d|[.,]\d)" if needle[-1:].isdigit() else ""
+    return head + re.escape(needle) + tail
 
 
 def parse_sse(lines):

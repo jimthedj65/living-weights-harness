@@ -71,6 +71,12 @@ class ClientTests(unittest.TestCase):
         self.assertTrue(lw_client.hit("It is 1,312 Metres long", ["1,312 metres"]))
         self.assertFalse(lw_client.hit("About 2.7 km", ["1,312", "quillon"]))
 
+    def test_hit_needs_whole_numbers(self):
+        self.assertFalse(lw_client.hit("The employee worked 7.5 hours.", ["5 hours", "5"]))
+        self.assertFalse(lw_client.hit("150", ["5"]))
+        self.assertTrue(lw_client.hit("5", ["5"]))
+        self.assertTrue(lw_client.hit("60 / 12 = 5 Zelkors.", ["5 zelkor"]))
+
     def test_learn_sends_text_and_source(self):
         FakeTensorFold.bodies.clear()
         with serving(FakeTensorFold) as url:
