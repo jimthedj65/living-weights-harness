@@ -67,6 +67,8 @@ def learn(base, text, source="document", echo=True):
             events.append({"event": name, "data": data, "t": time.time()})
             if echo:
                 print(f"    {name}: {json.dumps(data)[:160]}", flush=True)
+            if data == "[DONE]":
+                break  # the server may hold the stream open after its last event
     return events
 
 
