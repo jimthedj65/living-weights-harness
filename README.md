@@ -47,6 +47,18 @@ python3 lw_rules.py probe --url http://127.0.0.1:8080 --label after
 
 Each phase writes every question and answer to `results/<phase>-<timestamp>.json` (`--results DIR` to move it).
 
+## Token-for-token comparison (`lw_tokens.py`)
+
+Asks all 155 questions of both panels and keeps each greedy reply with its token ids, then reports per kind how many
+replies match a reference capture token for token and where each other one first differs. The ids come from reading
+the reply text with one server's `/tokenize`, so both captures are read by the same tokenizer.
+
+```sh
+python3 lw_tokens.py capture --url http://127.0.0.1:8081 --label untaught
+python3 lw_tokens.py capture --url http://127.0.0.1:8080 --tokenize-url http://127.0.0.1:8081 --label taught
+python3 lw_tokens.py compare --ref results/tokens-A.json --test results/tokens-B.json
+```
+
 ## Console (`console.py`)
 
 ```sh
