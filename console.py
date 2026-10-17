@@ -3,6 +3,7 @@
 import argparse
 import http.client
 import json
+import os
 import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -72,6 +73,9 @@ class Handler(BaseHTTPRequestHandler):
         conn = http.client.HTTPConnection(upstream.hostname, upstream.port, timeout=UPSTREAM_TIMEOUT_S)
         try:
             headers = {k: v for k, v in self.headers.items() if k.lower() not in HOP_HEADERS | {"host", "origin"}}
+            key = os.environ.get("TENSORFOLD_API_KEY")
+            if key and "authorization" not in {k.lower() for k in headers}:
+                headers["Authorization"] = f"Bearer {key}"  # the page never holds the key
             conn.request(self.command, path, body=body, headers=headers)
             resp = conn.getresponse()
             self.send_response(resp.status)

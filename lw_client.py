@@ -1,6 +1,7 @@
 """Standard-library client for a TensorFold server: greedy chat, keyword checks and /v1/slide/learn events."""
 
 import json
+import os
 import re
 import sys
 import time
@@ -16,9 +17,15 @@ CHAT_TIMEOUT_S = 300
 LEARN_TIMEOUT_S = 900
 
 
+def headers():
+    """JSON headers, plus a bearer key from TENSORFOLD_API_KEY when set (1.0.12+ `--slide` needs one)."""
+    key = os.environ.get("TENSORFOLD_API_KEY")
+    return {"Content-Type": "application/json"} | ({"Authorization": f"Bearer {key}"} if key else {})
+
+
 def post_json(url, body, timeout):
     """POST a JSON body and return the decoded JSON reply."""
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers())
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.load(resp)
 
@@ -60,7 +67,7 @@ def parse_sse(lines):
 def learn(base, text, source="document", echo=True):
     """Teach text through /v1/slide/learn and return every event with its arrival time."""
     body = json.dumps({"text": text, "source": source}).encode()
-    req = urllib.request.Request(f"{base}/v1/slide/learn", data=body, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(f"{base}/v1/slide/learn", data=body, headers=headers())
     events = []
     with urllib.request.urlopen(req, timeout=LEARN_TIMEOUT_S) as resp:
         for name, data in parse_sse(resp):

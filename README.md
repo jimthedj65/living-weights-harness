@@ -17,9 +17,13 @@ Teach a copy, never your only folder (see [the Living Weights guide](https://git
 cross-checks, also serve an untouched folder of the same checkpoint without `--slide`:
 
 ```sh
+export TENSORFOLD_API_KEY="$(openssl rand -hex 24)"
 tensorfold serve COPY --slide --slide-graph facts-graph.json --port 8080 --no-thinking
 tensorfold serve ORIGINAL --port 8081 --no-thinking
 ```
+
+From 1.0.12 `--slide` refuses to start without a key. The scripts and the console send `TENSORFOLD_API_KEY` as a bearer
+key when it is set, so export it in every shell that runs them.
 
 ## Fact test (`lw_facts.py`, `facts.json`)
 

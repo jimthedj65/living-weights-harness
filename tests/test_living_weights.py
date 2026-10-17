@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import threading
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.request
 
@@ -22,6 +23,7 @@ LEARN_STREAM = (b"event: fact\ndata: {\"id\": 1, \"text\": \"T\"}\n\nevent: lear
 
 class FakeTensorFold(http.server.BaseHTTPRequestHandler):
     bodies = []
+    auth = []
 
     def log_message(self, fmt, *args):
         pass
@@ -41,6 +43,7 @@ class FakeTensorFold(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         FakeTensorFold.bodies.append((self.path, body))
+        FakeTensorFold.auth.append(self.headers.get("Authorization"))
         if self.path == "/v1/slide/learn":
             return self._reply(200, LEARN_STREAM, "text/event-stream")
         question = body["messages"][-1]["content"]
@@ -137,6 +140,33 @@ class ConsoleTests(unittest.TestCase):
                 self.assertEqual(refused.exception.code, 403)
                 with urllib.request.urlopen(f"{page}/targets", timeout=10) as resp:
                     self.assertEqual(json.load(resp)["clean"], {"learn": False, "reference": True})
+
+
+class ApiKeyTests(unittest.TestCase):
+    """1.0.12 refuses --slide without a key, so every request carries TENSORFOLD_API_KEY when it is set."""
+
+    def setUp(self):
+        FakeTensorFold.auth.clear()
+
+    def test_sends_bearer_key_from_environment(self):
+        with unittest.mock.patch.dict("os.environ", {"TENSORFOLD_API_KEY": "k1"}), serving(FakeTensorFold) as base:
+            lw_client.ask(base, "Q?")
+            lw_client.learn(base, "T", echo=False)
+        self.assertEqual(FakeTensorFold.auth, ["Bearer k1", "Bearer k1"])
+
+    def test_sends_no_authorization_without_a_key(self):
+        with unittest.mock.patch.dict("os.environ", {}, clear=True), serving(FakeTensorFold) as base:
+            lw_client.ask(base, "Q?")
+        self.assertEqual(FakeTensorFold.auth, [None])
+
+    def test_console_adds_key_upstream(self):
+        with unittest.mock.patch.dict("os.environ", {"TENSORFOLD_API_KEY": "k2"}), serving(FakeTensorFold) as base:
+            console.Handler.targets = console.build_targets(base)
+            with serving(console.Handler) as page:
+                req = urllib.request.Request(f"{page}/m/taught/v1/chat/completions",
+                                             data=json.dumps({"messages": [{"role": "user", "content": "Q"}]}).encode())
+                urllib.request.urlopen(req, timeout=10).read()
+        self.assertEqual(FakeTensorFold.auth, ["Bearer k2"])
 
 
 if __name__ == "__main__":
